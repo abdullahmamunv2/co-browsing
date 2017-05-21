@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Remote Assist Demo (Client)</title>
+    <link rel="stylesheet" href="lib/css/bootstrap.min.css">
+    <link rel="stylesheet" href="lib/css/scroll.css">
+    
+</head>
+<style>
+/* Full-width input fields */
+input[type=text], input[type=password] {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+/* Set a style for all buttons */
+button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 14px 20px;
+    margin: 8px 0;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+}
+
+button:hover {
+    opacity: 0.8;
+}
+
+/* Extra styles for the cancel button */
+.cancelbtn {
+    width: auto;
+    padding: 10px 18px;
+    background-color: #f44336;
+}
+
+/* Center the image and position the close button */
+.imgcontainer {
+    text-align: center;
+    margin: 24px 0 12px 0;
+    position: relative;
+}
+
+img.avatar {
+    width: 40%;
+    border-radius: 50%;
+}
+
+.container {
+    padding: 16px;
+}
+
+span.psw {
+    float: right;
+    padding-top: 16px;
+}
+
+/* The Modal (background) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    padding-top: 60px;
+}
+
+/* Modal Content/Box */
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto 15% auto; /* 5% from the top, 15% from the bottom and centered */
+    border: 1px solid #888;
+    width: 80%; /* Could be more or less, depending on screen size */
+}
+
+/* The Close Button (x) */
+.close {
+    position: absolute;
+    right: 25px;
+    top: 0;
+    color: #000;
+    font-size: 35px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: red;
+    cursor: pointer;
+}
+
+/* Add Zoom Animation */
+.animate {
+    -webkit-animation: animatezoom 0.6s;
+    animation: animatezoom 0.6s
+}
+
+@-webkit-keyframes animatezoom {
+    from {-webkit-transform: scale(0)} 
+    to {-webkit-transform: scale(1)}
+}
+    
+@keyframes animatezoom {
+    from {transform: scale(0)} 
+    to {transform: scale(1)}
+}
+
+/* Change styles for span and cancel button on extra small screens */
+@media screen and (max-width: 300px) {
+    span.psw {
+       display: block;
+       float: none;
+    }
+    .cancelbtn {
+       width: 100%;
+    }
+}
+</style>
+<style src=""></style>
+<body>
+
+<h2>Modal Login Form</h2>
+
+<button onclick="document.getElementById('id01').style.display='block'" style="width:auto;">Login</button>
+
+<!-- HTML Example by Way2Tutorial.com -->
+<div style="height:100px;width:400px;border:solid 2px orange;overflow:scroll;overflow-x:hidden;overflow-y:scroll;">
+<p style="height:200px;">
+Scroll box automatic set in scroll in vertical scrollbar....<br /><br />
+Scroll box automatic set in scroll in vertical scrollbar....<br /><br />
+Scroll box automatic set in scroll in vertical scrollbar....<br /><br />
+Scroll box automatic set in scroll in vertical scrollbar....</p>
+</div>
+<p><a href="">HTML Example</a></p>
+
+
+<div id="id01" class="modal">
+  
+  <form class="modal-content animate" action="/action_page.php">
+    <div class="imgcontainer">
+      <span onclick="document.getElementById('id01').style.display='none'" class="close" title="Close Modal">&times;</span>
+      <img src="" alt="Avatar" class="avatar">
+    </div>
+
+    <div class="container">
+      <label><b>Username</b></label>
+      <input type="text" placeholder="Enter Username" name="uname" required>
+
+      <label><b>Password</b></label>
+      <input type="text" placeholder="Enter Password" name="psw" required>
+        
+      <button type="submit">Login</button>
+      <input type="checkbox" checked="checked"> Remember me
+
+      <label><b>Username</b></label>
+      <input type="text" placeholder="Enter Username" name="uname" required>
+
+      <label><b>Password</b></label>
+      <input type="text" placeholder="Enter Password" name="psw" required>
+        
+      <button type="submit">Login</button>
+      <input type="checkbox" checked="checked"> Remember me
+      <label><b>Username</b></label>
+      <input type="text" placeholder="Enter Username" name="uname" required>
+
+      <label><b>Password</b></label>
+      <input type="text" placeholder="Enter Password" name="psw" required>
+        
+      <button type="submit">Login</button>
+      <input type="checkbox" checked="checked"> Remember me
+      <label><b>Username</b></label>
+      <input type="text" placeholder="Enter Username" name="uname" required>
+
+      <label><b>Password</b></label>
+      <input type="text" placeholder="Enter Password" name="psw" required>
+        
+      <button type="submit">Login</button>
+      <input type="checkbox" checked="checked"> Remember me
+      <label><b>Username</b></label>
+      <input type="text" placeholder="Enter Username" name="uname" required>
+
+      <label><b>Password</b></label>
+      <input type="text" placeholder="Enter Password" name="psw" required>
+        
+      <button type="submit">Login</button>
+      <input type="checkbox" checked="checked"> Remember me
+      <label><b>Username</b></label>
+      <input type="text" placeholder="Enter Username" name="uname" required>
+
+      <label><b>Password</b></label>
+      <input type="text" placeholder="Enter Password" name="psw" required>
+        
+      <button type="submit">Login</button>
+      <input type="checkbox" checked="checked"> Remember me
+      <label><b>Username</b></label>
+      <input type="text" placeholder="Enter Username" name="uname" required>
+
+      <label><b>Password</b></label>
+      <input type="text" placeholder="Enter Password" name="psw" required>
+        
+      <button type="submit">Login</button>
+      <input type="checkbox" checked="checked"> Remember me
+
+    </div>
+
+    <div class="container" style="background-color:#f1f1f1">
+      <button type="button" onclick="document.getElementById('id01').style.display='none'" class="cancelbtn">Cancel</button>
+      <span class="psw">Forgot <a href="#">password?</a></span>
+    </div>
+  </form>
+</div>
+
+<div class="scrollbar-outer">
+    <p class="permanent">
+        Simple outer scrollbar can be used as CSS base for custom outer scrollbars.
+        This example shows nested scrollbars functionality: nested scrollbar styles do not
+        interfere with parent scrollbar styles, i.e. different scrollbars can be safely used
+        inside each other.
+    </p>
+    <div class="inner-content scrollbar-dynamic">
+        <div style="padding: 10px;">
+            <h4>
+                This container is an example of nested Dynamic scrollbar with padding.
+            </h4>
+            <p>
+                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Proin nibh augue, suscipit a,
+                scelerisque sed, lacinia in, mi. Cras vel lorem. Etiam pellentesque aliquet tellus.
+                Phasellus pharetra nulla ac diam. Quisque semper justo at risus. Donec venenatis, turpis vel
+                hendrerit interdum, dui ligula ultricies purus, sed posuere libero dui id orci. Nam congue,
+                pede vitae dapibus aliquet, elit magna vulputate arcu, vel tempus metus leo non est. Etiam
+                sit amet lectus quis est congue mollis. Phasellus congue lacus eget neque. Phasellus ornare,
+                ante vitae consectetuer consequat, purus sapien ultricies dolor, et mollis pede metus eget
+                nisi. Praesent sodales velit quis augue. Cras suscipit, urna at aliquam rhoncus, urna quam
+                viverra nisi, in interdum massa nibh nec erat.
+            </p>
+        </div>
+    </div>
+    <p>
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Proin nibh augue, suscipit a,
+        scelerisque sed, lacinia in, mi. Cras vel lorem. Etiam pellentesque aliquet tellus.
+        Phasellus pharetra nulla ac diam. Quisque semper justo at risus. Donec venenatis, turpis vel
+        hendrerit interdum, dui ligula ultricies purus, sed posuere libero dui id orci. Nam congue,
+        pede vitae dapibus aliquet, elit magna vulputate arcu, vel tempus metus leo non est. Etiam
+        sit amet lectus quis est congue mollis. Phasellus congue lacus eget neque. Phasellus ornare,
+        ante vitae consectetuer consequat, purus sapien ultricies dolor, et mollis pede metus eget
+        nisi. Praesent sodales velit quis augue. Cras suscipit, urna at aliquam rhoncus, urna quam
+        viverra nisi, in interdum massa nibh nec erat.
+    </p>
+    <p>
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Proin nibh augue, suscipit a,
+        scelerisque sed, lacinia in, mi. Cras vel lorem. Etiam pellentesque aliquet tellus.
+        Phasellus pharetra nulla ac diam. Quisque semper justo at risus. Donec venenatis, turpis vel
+        hendrerit interdum, dui ligula ultricies purus, sed posuere libero dui id orci. Nam congue,
+        pede vitae dapibus aliquet, elit magna vulputate arcu, vel tempus metus leo non est. Etiam
+        sit amet lectus quis est congue mollis. Phasellus congue lacus eget neque. Phasellus ornare,
+        ante vitae consectetuer consequat, purus sapien ultricies dolor, et mollis pede metus eget
+        nisi. Praesent sodales velit quis augue. Cras suscipit, urna at aliquam rhoncus, urna quam
+        viverra nisi, in interdum massa nibh nec erat.
+    </p>
+    <p>
+        Lorem ipsum dolor sit amet, consectetur adipisicing elit. Proin nibh augue, suscipit a,
+        scelerisque sed, lacinia in, mi. Cras vel lorem. Etiam pellentesque aliquet tellus.
+        Phasellus pharetra nulla ac diam. Quisque semper justo at risus. Donec venenatis, turpis vel
+        hendrerit interdum, dui ligula ultricies purus, sed posuere libero dui id orci. Nam congue,
+        pede vitae dapibus aliquet, elit magna vulputate arcu, vel tempus metus leo non est. Etiam
+        sit amet lectus quis est congue mollis. Phasellus congue lacus eget neque. Phasellus ornare,
+        ante vitae consectetuer consequat, purus sapien ultricies dolor, et mollis pede metus eget
+        nisi. Praesent sodales velit quis augue. Cras suscipit, urna at aliquam rhoncus, urna quam
+        viverra nisi, in interdum massa nibh nec erat.
+    </p>
+</div>
+<script type="text/javascript" src="lib/js/jquery.js"></script>
+<script type="text/javascript" src="https://gromo.github.io/jquery.scrollbar/jquery.scrollbar.js"></script>
+<script type="text/javascript" src="lib/js/bootstrap.min.js"></script>
+
+<!-- co -->
+<script type="text/javascript" src="lib/js/client.js"></script>
+<script type="text/javascript" src="lib/js/screenshare.js"></script>
+
+<script>
+// Get the modal
+    jQuery(document).ready(function(){
+    jQuery('.scrollbar-outer').scrollbar();
+});
+var modal = document.getElementById('id01');
+
+// When the user clicks anywhere outside of the modal, close it
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+</script>
+
+</body>
+</html>
