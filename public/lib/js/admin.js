@@ -1,7 +1,7 @@
 var frame = $('#ClientView').contents();
 window.location = 'admin.html?#';
 function StartSession(){
-    console.log('start session with key : '+ SessionKey);
+    //console.log('start session with key : '+ SessionKey);
     var SessionKey = $('#SessionKey').val();
     
     $('#ClientView')[0].contentWindow.JoinRoom(SessionKey);

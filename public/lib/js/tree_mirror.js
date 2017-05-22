@@ -22,9 +22,8 @@ TreeMirror.prototype = {
   initialize: function(rootId, children) {
 
     this.idMap = {};
-    while (this.root.firstChild) {
-        this.root.removeChild(this.root.firstChild);
-    }
+
+
     this.idMap[rootId] = this.root;
 
     for (var i = 0; i < children.length; i++)
@@ -36,9 +35,6 @@ TreeMirror.prototype = {
       return null;
 
     if (typeof nodeData == 'number'){
-      if(nodeData ==81 ){
-        console.log(this.idMap[nodeData]);
-      }
       return this.idMap[nodeData];
     }
 
@@ -46,8 +42,6 @@ TreeMirror.prototype = {
 
     var node;
 
-    //console.log('nodeData');
-    //console.log(nodeData);
     switch(nodeData.nodeType) {
       case Node.COMMENT_NODE:
         node = doc.createComment(nodeData.textContent);
@@ -140,15 +134,12 @@ TreeMirror.prototype = {
           if (!this.delegate ||
               !this.delegate.setAttribute ||
               !this.delegate.setAttribute(node, attrName, newVal)) {
-                //if(node != undefined ){
+                if(node != undefined ){
                   node.setAttribute(attrName, newVal);
-                //}
+                }
           }
         }
       }, this);
-      
-      //console.log('after : ');
-      //console.log(node);
 
     }
 
@@ -188,8 +179,8 @@ function TreeMirrorClient(target, mirror, testingQueries) {
   //console.log(target.body.childNodes);
   this.mirror = mirror;
   this.knownNodes = new MutationSummary.NodeMap;
-  console.log(this.knownNodes);
-  console.log(target);
+  this.deserialize = {};
+  //this.deseializaKnowNodes = new MutationSummary.NodeMap;
 
   var rootId = this.serializeNode(target).id;
   //console.log(rootId);
@@ -234,13 +225,16 @@ TreeMirrorClient.prototype = {
   rememberNode: function(node) {
     var id = this.nextId++;
     this.knownNodes.set(node, id);
-    //console.log('Remember id : '+id);
-    //console.log(node);
+    this.deserialize[id] = node;
     return id;
   },
 
   forgetNode: function(node) {
+    
+    delete this.deserialize[this.knownNodes.get(node)];
     delete this.knownNodes.delete(node);
+    
+    //delete this.deseializaKnowNodes.delete(this.knownNodes.get(node));
   },
 
   serializeNode: function(node, recursive) {
@@ -249,7 +243,7 @@ TreeMirrorClient.prototype = {
 
     var id = this.knownNodes.get(node);
     if (id != undefined) {
-      console.log('Return id :' + id);
+      //console.log('Return id :' + id);
       //console.log(node);
       return id;
     }
@@ -384,5 +378,174 @@ TreeMirrorClient.prototype = {
     this.mirror.applyChanged(removed, moved, attributes, text);
 
     changed.removed.forEach(this.forgetNode, this);
+
+    //console.log(changed);
   }
 }
+
+
+function TreeMirrorAdmin(root) {
+  this.root = root;
+  this.idMap = {};
+}
+
+TreeMirrorAdmin.prototype = {
+  initialize: function(rootId, children) {
+
+    this.idMap = {};
+
+
+    this.idMap[rootId] = this.root;
+
+    for (var i = 0; i < children.length; i++)
+      this.deserializeNode(children[i], this.root);
+  },
+
+  deserializeNode: function(nodeData, parent) {
+    if (nodeData === null)
+      return null;
+
+    if (typeof nodeData == 'number'){
+      return this.idMap[nodeData];
+    }
+
+    var doc = this.root instanceof HTMLDocument ? this.root : this.root.ownerDocument;
+
+    var node;
+
+    switch(nodeData.nodeType) {
+      case Node.COMMENT_NODE:
+        node = doc.createComment(nodeData.textContent);
+        break;
+
+      case Node.TEXT_NODE:
+        node = doc.createTextNode(nodeData.textContent);
+        break;
+
+      case Node.DOCUMENT_TYPE_NODE:
+        node = doc.implementation.createDocumentType(nodeData.name, nodeData.publicId, nodeData.systemId);
+        break;
+
+      case Node.ELEMENT_NODE:
+        if (this.delegate && this.delegate.createElement)
+          node = this.delegate.createElement(nodeData.tagName);
+        if (!node)
+          node = doc.createElement(nodeData.tagName);
+
+        Object.keys(nodeData.attributes).forEach(function(name) {
+          if (!this.delegate ||
+              !this.delegate.setAttribute ||
+              !this.delegate.setAttribute(node, name, nodeData.attributes[name])) {
+                try{
+                  //if(paren)
+                   node.setAttribute(name, nodeData.attributes[name]);
+                }catch(err){
+                  console.log(err);
+                }
+            
+          }
+        }, this);
+
+        break;
+    }
+
+    this.idMap[nodeData.id] = node;
+
+    /*if (parent){
+        try{
+          //if(paren)
+          parent.appendChild(node);
+        }catch(err){
+           console.log(err);
+           //console.log(node);
+        }
+     }*/
+
+    if (nodeData.childNodes) {
+      for (var i = 0; i < nodeData.childNodes.length; i++)
+        this.deserializeNode(nodeData.childNodes[i], node);
+    }
+
+    return node;
+  },
+
+  applyChanged: function(removed, addedOrMoved, attributes, text) {
+    
+    function removeNode(node) {
+      if(node == undefined ) return;
+      if (node.parentNode)
+        node.parentNode.removeChild(node);
+    }
+
+    function moveOrInsertNode(data) {
+      var parent = data.parentNode;
+      var previous = data.previousSibling;
+      var node = data.node;
+      try{
+                  //if(paren)
+            parent.insertBefore(node, previous ? previous.nextSibling : parent.firstChild);
+      }catch(err){
+            console.log(err);
+                  //console.log(node);
+      }
+      
+    }
+
+    function updateAttributes(data) {
+      if(data == undefined) return;
+      //console.log('Before');
+      //console.log(data);
+      var node = this.deserializeNode(data.node);
+
+      Object.keys(data.attributes).forEach(function(attrName) {
+        var newVal = data.attributes[attrName];
+        if (newVal === null) {
+          node.removeAttribute(attrName);
+        } else {
+          if (!this.delegate ||
+              !this.delegate.setAttribute ||
+              !this.delegate.setAttribute(node, attrName, newVal)) {
+                if(node != undefined ){
+                  node.setAttribute(attrName, newVal);
+                }
+          }
+        }
+      }, this);
+      
+      //console.log('after : ');
+      //console.log(node);
+
+    }
+
+    function updateText(data) {
+      var node = this.deserializeNode(data.node);
+      node.textContent = data.textContent;
+    }
+
+    addedOrMoved.forEach(function(data) {
+      data.node = this.deserializeNode(data.node);
+      data.previousSibling = this.deserializeNode(data.previousSibling);
+      data.parentNode = this.deserializeNode(data.parentNode);
+
+      // NOTE: Applying the changes can result in an attempting to add a child
+      // to a parent which is presently an ancestor of the parent. This can occur
+      // based on random ordering of moves. The way we handle this is to first
+      // remove all changed nodes from their parents, then apply.
+      removeNode(data.node);
+    }, this);
+
+    removed.map(this.deserializeNode, this).forEach(removeNode);
+    addedOrMoved.forEach(moveOrInsertNode);
+    
+    attributes.forEach(updateAttributes, this);
+    text.forEach(updateText, this);
+
+    removed.forEach(function(id) {
+      delete this.idMap[id]
+    }, this);
+
+  }
+}
+
+
+

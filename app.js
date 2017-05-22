@@ -38,16 +38,16 @@ io.on('connection', function(socket) {
     console.log('connected');
     socket.on('CreateSession', function(msg){
         socket.join(msg);
-        console.log('Create session...................');
+        //console.log('Create session...................');
     });
     socket.on('PageChange', function(msg){
         socket.join(msg);
         io.sockets.in(msg).emit('SessionStarted', '');
-        console.log('PageChange');
+        //console.log('PageChange');
     });
     socket.on('JoinRoom', function(msg){
         socket.join(msg);
-        console.log('Join Room with ' + msg);
+        //console.log('Join Room with ' + msg);
         io.sockets.in(msg).emit('SessionStarted', '');
     });
     socket.on('ClientMousePosition', function(msg){
@@ -55,20 +55,45 @@ io.on('connection', function(socket) {
         //socket.emit('ClientMousePosition', {PositionLeft:msg.PositionLeft, PositionTop:msg.PositionTop});
         socket.broadcast.to(msg.room).emit('ClientMousePosition', {PositionLeft:msg.PositionLeft, PositionTop:msg.PositionTop});
     });
+
+    socket.on('AdminScrollPosition', function(msg){
+        socket.broadcast.to(msg.room).emit('AdminScrollPosition', {node : msg.node,scrollLeft: msg.scrollLeft, scrollTop: msg.scrollTop});
+    });
+
+    socket.on('AdminChanged', function(msg){
+        socket.broadcast.to(msg.room).emit('AdminChanged', {f:msg.f, args:msg.args});
+    });
+
     socket.on('AdminMousePosition', function(msg){
-        console.log('AdminMousePosition');
+        //console.log('AdminMousePosition');
         socket.broadcast.to(msg.room).emit('AdminMousePosition', {PositionLeft:msg.PositionLeft, PositionTop:msg.PositionTop});
     });
+    socket.on('AdminonClick', function(msg){
+        //console.log('AdminMousePosition');
+        socket.broadcast.to(msg.room).emit('AdminonClick', {node : msg.node});
+    });
+
     socket.on('changeHappened', function(msg){
-        console.log('changeHappened');
+        if(msg.change.args){
+            if(msg.change.f=='initialize')
+                console.log('changeHappened     : ' +msg.change.f);
+        }
         socket.broadcast.to(msg.room).emit('changes', msg.change);
+    });
+
+    socket.on('ViewrchangeHappened', function(msg){
+        /*if(msg.change.args){
+            if(msg.change.f=='initialize')
+                console.log('changeHappened     : ' +msg.change.f);
+        }*/
+        socket.broadcast.to(msg.room).emit('viewerchanges', msg.change);
     });
     socket.on('DOMLoaded', function(msg){
         socket.broadcast.to(msg.room).emit('DOMLoaded', '');
     });
 
     socket.on('test', function(msg){
-        console.log('Test');
+        //console.log('Test');
     });
 });
 

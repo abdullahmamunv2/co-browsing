@@ -4,6 +4,9 @@ var oDOM;
 var CDN = 'http://localhost:3000/';
 var SocketCDN = 'http://localhost:3000';
 var mirrorClient;
+var mirrorAdmin;
+
+var allowScroll=true;
 
 
 /* This block of code is to load inaccessible scripts that may be relative on mobile devices or behind a VPN or restricted network
@@ -17,6 +20,8 @@ var mirrorClient;
  }
 
  */
+
+
 
 function loadScript(sScriptSrc, oCallback) {
     var oHead = document.getElementsByTagName('head')[0];
@@ -39,15 +44,17 @@ function LoadAllScripts(){
         loadScript(CDN + 'lib/js/jquery.js', function(){
             loadScript(CDN + 'lib/js/mutation_summary.js', function(){
                 loadScript(CDN + 'lib/js/tree_mirror.js', function(){
-                    //my code 
-                    loadScript('https://cdn.socket.io/socket.io-1.1.0.js', function(){
-                    //loadScript(SocketCDN + 'socket.io/socket.io.js', function(){
-                        window.addEventListener('load', function() {
-                            init();
-                            //startMirroring();
+                    loadScript(CDN + 'lib/js/scrollEvent.js', function(){
+                        //my code 
+                        loadScript('https://cdn.socket.io/socket.io-1.1.0.js', function(){
+                        //loadScript(SocketCDN + 'socket.io/socket.io.js', function(){
+                            window.addEventListener('load', function() {
+                                init();
+                                //startMirroring();
+                            });
+                            
                         });
-                        
-                    });
+                    })
                 })
             });
         })
@@ -57,15 +64,17 @@ function LoadAllScripts(){
             loadScript(CDN + 'lib/js/tree_mirror.js', function(){
                 //my code 
                 loadScript('https://cdn.socket.io/socket.io-1.1.0.js', function(){
-                //loadScript(SocketCDN + 'socket.io/socket.io.js', function(){
-                    window.addEventListener('load', function() {
-                        //AddMenu();
-                        init();
-                        //$('#MenuTable').css({left: ($(window).width() - 30), top: ($(window).height()/2) - 150});
-                        //console.log('LOAD');
-                        //console.log(document.body.childNodes);
-                        
-                    });
+                    loadScript(CDN + 'lib/js/scrollEvent.js', function(){
+                    //loadScript(SocketCDN + 'socket.io/socket.io.js', function(){
+                        window.addEventListener('load', function() {
+                            //AddMenu();
+                            init();
+                            //$('#MenuTable').css({left: ($(window).width() - 30), top: ($(window).height()/2) - 150});
+                            //console.log('LOAD');
+                            //console.log(document.body.childNodes);
+                            
+                        });
+                    })
                     
                     
                     
@@ -133,11 +142,6 @@ function startMirroring() {
         },
 
         applyChanged: function(removed, addedOrMoved, attributes, text) {
-            /*console.log('Start');
-            console.log(removed);
-            console.log(addedOrMoved);
-            console.log(attributes);
-            console.log(text);*/
             if(socket != undefined){
                 socketSend({
                     f: 'applyChanged',
@@ -148,6 +152,7 @@ function startMirroring() {
         },
 
         complete : function(){
+            //mirrorAdmin
             if(sessvars.Session){
                 //console.log()
                 ContinueSession();
@@ -156,6 +161,27 @@ function startMirroring() {
         }
 
     });
+
+
+    mirrorAdmin = new TreeMirror(document, {
+        createElement: function(tagName) {
+            if (tagName == 'SCRIPT') {
+                var node = document.createElement('NO-SCRIPT');
+                node.style.display = 'none';
+                return node;
+            }
+
+            if (tagName == 'HEAD') {
+                var node = document.createElement('HEAD');
+                node.appendChild(document.createElement('BASE'));
+                node.firstChild.href = base;
+                return node;
+            }
+        }
+    });
+
+
+
 }
 function ContinueSession(){
 
@@ -168,29 +194,55 @@ function ContinueSession(){
             $('#RemoteStatus').text('Status: Connected!');
             socketSend({height: $(window).height(), width: $(window).width()});
             socketSend({ base: location.href.match(/^(.*\/)[^\/]*$/)[1] });
-            console.log('oDOM');
-            console.log(oDOM);
             socketSend(oDOM);
             SendMouse();
-            $('body').append('<div id="AdminPointer"></div> ');
+            //$('body').append('<div id="AdminPointer"></div> ');
+            BindScroll();
 
-            $("*").on("scroll",function(event){
-
-                var element = event.target;
-                var n = mirrorClient.serializeNode(element);
-                console.log(n);
-                socketSend({scrollevent: true  , data : {className : event.target.className , scrollTop:event.currentTarget.scrollTop , node: n}});
-            });
             $(window).scroll(function(){
-                socketSend({scroll: $(window).scrollTop()});
+                socketSend({Windowscroll: $(window).scrollTop()});
             });
         });
         socket.on('AdminMousePosition', function(msg) {
             $('#AdminPointer').css({'left': msg.PositionLeft - 15, 'top': msg.PositionTop});
         });
+
+        socket.on('AdminScrollPosition', function(msg) {
+            //v
+        });
+
+
+        socket.on('AdminonClick', function(msg) {
+            var event = msg;
+            element = mirrorClient.deserialize[event.node];
+            $(element).click();
+            //console.log(msg);
+        });
+
+
         socket.on('DOMLoaded', function(){
             BindEverything();
-        })
+        });
+
+        socket.on('viewerchanges', function(msg){
+            if(msg.Windowscroll){
+                $(window).scrollTop(msg.Windowscroll);
+            }
+            else if(msg.viwerScrollStart){
+                allowScroll = false;
+            }
+            else if(msg.viwerScrollStop){
+                allowScroll = true;
+            }
+            else if(msg.scrollevent){
+                var event = msg.data;
+                //console.log(event);
+                allowScroll = false;
+                element = mirrorClient.deserialize[event.node];
+                $(element).scrollTop(event.scrollTop);
+                //console.log(msg);
+            }
+        });
     });
 }
 function CreateSession(){
@@ -213,18 +265,15 @@ function CreateSession(){
             
             socketSend(oDOM);
             SendMouse();
-            $('body').append('<div id="AdminPointer"></div> ');
-            $("*").on("scroll",function(event){
+            BindScroll();
 
-                 
-                var element = event.target;
-                var n = mirrorClient.serializeNode(element);
-                socketSend({scrollevent: true  , data : {className : event.target.className , scrollTop:event.currentTarget.scrollTop , node: n}});
-            });
+            $('body').append('<div id="AdminPointer"></div> ');
             $(window).scroll(function(){
                 //console.log('scrolled : '+ $(window).scrollTop() );
                 socketSend({scroll: $(window).scrollTop()});
             });
+
+            //$(this).scrollstop(func)
         });
         socket.on('AdminMousePosition', function(msg) {
             $('#AdminPointer').css({'left': msg.PositionLeft - 15, 'top': msg.PositionTop});
@@ -283,9 +332,38 @@ function SendMouse(){
                 + (doc && doc.scrollTop || body && body.scrollTop || 0)
                 - (doc.clientTop || 0);
         }
-        socket.emit('ClientMousePosition', {room: sessvars.Session, PositionLeft: e.pageX, PositionTop: e.pageY - 5});
+        //socket.emit('ClientMousePosition', {room: sessvars.Session, PositionLeft: e.pageX, PositionTop: e.pageY - 5});
         //console.log('on mouse move' +  e.pageX+" "+e.pageY + "     "+SessionKey);
     }
+}
+
+
+function BindScroll(){
+    $("*").on("scroll",function(event){
+        console.log('inside BindScroll ' + allowScroll);
+        if(allowScroll){
+            var element = event.target;
+            var n = mirrorClient.serializeNode(element);
+            socketSend({scrollevent: true  , data : {className : event.target.className , scrollTop:event.currentTarget.scrollTop , node: n}});
+        }
+    });
+
+    $("*").on("scrollstart", function(event){
+        if(allowScroll){
+            socketSend({visitorScrollStart : true});
+        }
+        //allowScroll = true;
+        console.log('scroll start');
+    });
+
+    $("*").on("scrollstop", function(event){
+        if(allowScroll){
+            socketSend({visitorScrollStop : true});
+            console.log('scroll stop');
+        }
+        //allowScroll = true;
+    });
+
 }
 
 /*  ------------------------- Code for converting relative images to Data URLs -----------------------------------

@@ -1,26 +1,40 @@
-var socket = io('http://localhost:3000');
+var CDN = 'http://localhost:3000/';
+var SocketCDN = 'http://localhost:3000';
+
+var socket = io(SocketCDN);
 var SessionKey;
 var element;
 var mirror;
+var mutationSummary;
+var mirrorAdmin;
+var oDOM;
 
-function scrollable(element) {
-    var vertically_scrollable, horizontally_scrollable;
+var allowScroll=true;
 
-    var e = $(element);
 
-     if (   e.css('overflow') == 'scroll' 
-         || e.css('overflow') == 'auto'
-         || e.css('overflowY') == 'scroll'
-         || e.css('overflowY') == 'auto'
-         || e.css('height') != 'none'
-         || e.css('max-height') != 'none'                          
-         ) {
-         return true;
-    } else {
-        return false;
-    }
+function loadScript(sScriptSrc, oCallback) {
+    var oHead = document.getElementsByTagName('head')[0];
+    var oScript = document.createElement('script');
+    oScript.type = 'text/javascript';
+    oScript.src = sScriptSrc;
+    oScript.onload = oCallback;
+    oScript.onreadystatechange = function() {
+        if (this.readyState == 'loaded' ||this.readyState == 'complete') {
+            oCallback();
+        }
+    };
+    oHead.appendChild(oScript);
 }
 
+
+/// this is a plugin for special event like scrollstart and scrollstop
+function LoadPlugInScripts(){
+    loadScript(CDN + 'lib/js/scrollEvent.js', function(){
+
+    });
+}
+
+LoadPlugInScripts();
 
 function SendMouse(){
     document.onmousemove = function(e) {
@@ -42,6 +56,29 @@ function SendMouse(){
 }
 
 
+function SendScroll(){
+    $("*").on("scroll",function(event){
+        //console.log('send scroll');
+        var element = event.target;
+        var n = mirrorAdmin.serializeNode(element);
+        socket.emit('AdminScrollPosition', {node : n,scrollLeft: event.currentTarget.scrollLeft, scrollTop: event.currentTarget.scrollTop, room: SessionKey});
+        //socketSend({scrollevent: true  , data : {className : event.target.className , scrollTop:event.currentTarget.scrollTop , node: n}});
+    });
+}
+
+function SendClick(){
+    $(document).click(function(event) {
+        var element = event.target;
+        var n = mirrorAdmin.serializeNode(element);
+        socket.emit('AdminonClick', {node : n, room: SessionKey});
+    });
+}
+
+function socketSend(msg) {
+    socket.emit('ViewrchangeHappened', {change: msg, room: SessionKey});
+}
+
+
 
 socket.on('connect', function(){
     //console.log('connected to server');
@@ -57,6 +94,7 @@ socket.on('SessionStarted', function() {
     console.log('SessionStarted..............');
     SessionStarted();
     SendMouse();
+    
 });
 
 function JoinRoom(key){
@@ -65,11 +103,6 @@ function JoinRoom(key){
     
 }
 function SessionStarted(){
-    console.log(document.childNodes);
-    while (document.firstChild) {
-        document.removeChild(document.firstChild);
-    }
-    console.log(document.childNodes);
 
     var base;
 
@@ -83,18 +116,16 @@ function SessionStarted(){
 
             if (tagName == 'HEAD') {
                 var node = document.createElement('HEAD');
-                node.appendChild(document.createElement('BASE'));
-                node.firstChild.href = base;
+                //node.appendChild(document.createElement('BASE'));
+                //node.firstChild.href = base;
                 return node;
             }
         }
     });
-    window.parent.RemoveMouse();
-    window.parent.AddMouse();
 
     socket.on('changes', function(msg){
         if (msg.base){
-            base = msg.base;
+            //base = msg.base;
         }
         if(msg.navigation){
             
@@ -105,38 +136,66 @@ function SessionStarted(){
         if(msg.args){
             //console.log('Dom loaded');
             //console.log(msg.args);
+            if(msg.f=='initialize'){
+                while (document.firstChild) {
+                    document.removeChild(document.firstChild);
+                }
+            }
             mirror[msg.f].apply(mirror, msg.args);
             if(msg.f == 'initialize'){
                 socket.emit('DOMLoaded', {room: SessionKey});
+                /// after loading DOM successfully we can listen any change in DOM using MutationSummery.
+
+                mirrorAdmin = new TreeMirrorClient(document, {
+                    initialize: function(rootId, children) {
+                        oDOM = {
+                            f: 'initialize',
+                            args: [rootId, children]
+                        }
+                    },
+                    applyChanged: function(removed, addedOrMoved, attributes, text) {
+                        //console.log('Admin Changed');
+                        if(socket != undefined){
+                            //socket.emit('AdminChanged', {f:'applyChanged',args: [removed, addedOrMoved, attributes, text], room: SessionKey});
+                        }
+                        //console.log('End');
+                    },
+                    complete : function(){}
+                });
+
+                /// now its time to send scroll position.
+                window.parent.RemoveMouse();
+                //window.parent.AddMouse();
+                //SendScroll();
+                SendClick();
+                BindScroll();
+
+                $(window).scroll(function(){
+                    socketSend({Windowscroll: $(window).scrollTop()});
+                });
+
             }
         }
         if(msg.scroll){
             //console.log('Scrolled  : ' +$(window).scrollTop());
-            $(window).scrollTop(msg.scroll);
-             //$('.modal').scrollTop(msg.scroll);
-            /*$('.modal').scroll(function(){
-                console.log('scrolled : '+ $('.modal').scrollTop() );
-                $('.modal').scrollTop()});*/
+            $(window).scrollTop(msg.Windowscroll);
         }
 
         if(msg.scrollevent){
-            console.log('custom scroll');
+            //console.log('scroll data ' + msg.event.scrollTop);
             var event = msg.data;
-            /*console.log(event.className);
-            if(event.className != ''){
-                element = document.getElementsByClassName(event.className);
-                $(element).scrollTop(event.scrollTop);
-            }
-            else{*/
+            element = mirror.deserializeNode(event.node);
+            $(element).scrollTop(event.scrollTop);
+            console.log('scroll data ' + event.scrollTop);
+            allowScroll = false;
+        }
 
-                
+        if(msg.visitorScrollStart){
+            allowScroll = false;
+        }
 
-                element = mirror.deserializeNode(event.node);
-                console.log(element);
-                $(element).scrollTop(event.scrollTop);
-                //console.log(element);
-           // }
-
+        if(msg.visitorScrollStop){
+            allowScroll = true;
         }
     });
     socket.on('ClientMousePosition', function(msg){
@@ -144,4 +203,28 @@ function SessionStarted(){
         window.parent.MoveMouse(msg.PositionLeft, msg.PositionTop - $(document).scrollTop());
         
     });
+}
+
+function BindScroll(){
+    $("*").on("scroll",function(event){
+        if(allowScroll){
+            var element = event.target;
+            var n = mirrorAdmin.serializeNode(element);
+            console.log(n);
+            socketSend({scrollevent: true  , data : {scrollTop:event.currentTarget.scrollTop , node: n}});
+        }
+    });
+
+    $("*").on("scrollstart", function(event){
+        if(allowScroll){
+            socketSend({viwerScrollStart : true});
+        }
+    });
+
+    $("*").on("scrollstop", function(event){
+        if(allowScroll){
+            socketSend({viwerScrollStop : true});
+        }
+    });
+
 }
