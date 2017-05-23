@@ -1615,6 +1615,13 @@
         return summaries;
     };
 
+    this.takeSummaries = function () {
+        if (!connected)
+            throw Error('Not connected');
+        var summaries = createSummaries(observer.takeRecords());
+        return changesToReport(summaries) ? summaries : undefined;
+    }
+
     this.reconnect();
   }
 

@@ -136,6 +136,7 @@ TreeMirror.prototype = {
               !this.delegate.setAttribute(node, attrName, newVal)) {
                 if(node != undefined ){
                   node.setAttribute(attrName, newVal);
+                  $(node).trigger('change');
                 }
           }
         }
@@ -221,6 +222,13 @@ TreeMirrorClient.prototype = {
       this.mutationSummary = undefined;
     }
   },
+  takeSummaries : function() {
+    if (this.mutationSummary) {
+      return this.mutationSummary.takeSummaries();
+      //this.mutationSummary = undefined;
+    }
+  }
+  ,
 
   rememberNode: function(node) {
     var id = this.nextId++;
@@ -291,6 +299,10 @@ TreeMirrorClient.prototype = {
     }
 
     return data;
+  },
+  deserializeNode : function(node){
+      if(this.deserialize[node] != undefined)
+        return this.deserialize[node];
   },
 
   serializeAddedAndMoved: function(changed) {
@@ -380,6 +392,81 @@ TreeMirrorClient.prototype = {
     changed.removed.forEach(this.forgetNode, this);
 
     //console.log(changed);
+  },
+
+  viewerApllyChanged : function(removed, addedOrMoved, attributes, text) {
+    
+    function removeNode(node) {
+      if(node == undefined ) return;
+      if (node.parentNode)
+        node.parentNode.removeChild(node);
+    }
+
+    function moveOrInsertNode(data) {
+      var parent = data.parentNode;
+      var previous = data.previousSibling;
+      var node = data.node;
+      try{
+                  //if(paren)
+            parent.insertBefore(node, previous ? previous.nextSibling : parent.firstChild);
+      }catch(err){
+            console.log(err);
+                  //console.log(node);
+      }
+      
+    }
+
+    function updateAttributes(data) {
+      if(data == undefined) return;
+      //console.log('Before');
+      //console.log(data);
+      var node = this.deserializeNode(data.node);
+
+      Object.keys(data.attributes).forEach(function(attrName) {
+        var newVal = data.attributes[attrName];
+        if (newVal === null) {
+          node.removeAttribute(attrName);
+        } else {
+          if (!this.delegate ||
+              !this.delegate.setAttribute ||
+              !this.delegate.setAttribute(node, attrName, newVal)) {
+                if(node != undefined ){
+                  node.setAttribute(attrName, newVal);
+                  $(node).trigger('change');
+                }
+          }
+        }
+      }, this);
+
+    }
+
+    function updateText(data) {
+      var node = this.deserializeNode(data.node);
+      node.textContent = data.textContent;
+    }
+
+    /*addedOrMoved.forEach(function(data) {
+      data.node = this.deserializeNode(data.node);
+      data.previousSibling = this.deserializeNode(data.previousSibling);
+      data.parentNode = this.deserializeNode(data.parentNode);
+
+      // NOTE: Applying the changes can result in an attempting to add a child
+      // to a parent which is presently an ancestor of the parent. This can occur
+      // based on random ordering of moves. The way we handle this is to first
+      // remove all changed nodes from their parents, then apply.
+      removeNode(data.node);
+    }, this); */
+
+    //removed.map(this.deserializeNode, this).forEach(removeNode);
+    //addedOrMoved.forEach(moveOrInsertNode);
+    
+    attributes.forEach(updateAttributes, this);
+    text.forEach(updateText, this);
+
+    /*removed.forEach(function(id) {
+      delete this.idMap[id]
+    }, this); */
+
   }
 }
 

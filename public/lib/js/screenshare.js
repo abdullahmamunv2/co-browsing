@@ -6,6 +6,8 @@ var SocketCDN = 'http://localhost:3000';
 var mirrorClient;
 var mirrorAdmin;
 
+var updateUI = true;
+
 var allowScroll=true;
 
 
@@ -142,7 +144,7 @@ function startMirroring() {
         },
 
         applyChanged: function(removed, addedOrMoved, attributes, text) {
-            if(socket != undefined){
+            if(socket != undefined && updateUI){
                 socketSend({
                     f: 'applyChanged',
                     args: [removed, addedOrMoved, attributes, text]
@@ -155,7 +157,7 @@ function startMirroring() {
             //mirrorAdmin
             if(sessvars.Session){
                 //console.log()
-                ContinueSession();
+                //ContinueSession();
             }
 
         }
@@ -200,7 +202,7 @@ function ContinueSession(){
             BindScroll();
 
             $(window).scroll(function(){
-                socketSend({Windowscroll: $(window).scrollTop()});
+                //socketSend({Windowscroll: $(window).scrollTop()});
             });
         });
         socket.on('AdminMousePosition', function(msg) {
@@ -242,6 +244,13 @@ function ContinueSession(){
                 $(element).scrollTop(event.scrollTop);
                 //console.log(msg);
             }
+            else if(msg.args){
+                
+                mirrorClient[msg.f].apply(mirrorClient, msg.args);
+                mirrorClient.takeSummaries();
+
+
+            }
         });
     });
 }
@@ -270,7 +279,7 @@ function CreateSession(){
             $('body').append('<div id="AdminPointer"></div> ');
             $(window).scroll(function(){
                 //console.log('scrolled : '+ $(window).scrollTop() );
-                socketSend({scroll: $(window).scrollTop()});
+                //socketSend({Windowscroll: $(window).scrollTop()});
             });
 
             //$(this).scrollstop(func)
@@ -278,8 +287,45 @@ function CreateSession(){
         socket.on('AdminMousePosition', function(msg) {
             $('#AdminPointer').css({'left': msg.PositionLeft - 15, 'top': msg.PositionTop});
         });
+
+        socket.on('AdminScrollPosition', function(msg) {
+            //v
+        });
+
+
+        socket.on('AdminonClick', function(msg) {
+            var event = msg;
+            element = mirrorClient.deserialize[event.node];
+            $(element).click();
+            //console.log(msg);
+        });
+
+
         socket.on('DOMLoaded', function(){
             BindEverything();
+        });
+
+        socket.on('viewerchanges', function(msg){
+            if(msg.Windowscroll){
+                $(window).scrollTop(msg.Windowscroll);
+            }
+            else if(msg.viwerScrollStart){
+                allowScroll = false;
+            }
+            else if(msg.viwerScrollStop){
+                allowScroll = true;
+            }
+            else if(msg.scrollevent){
+                var event = msg.data;
+                //console.log(event);
+                allowScroll = false;
+                element = mirrorClient.deserialize[event.node];
+                $(element).scrollTop(event.scrollTop);
+                //console.log(msg);
+            }
+            else if(msg.args){
+                mirrorClient[msg.f].apply(mirrorClient, msg.args);
+            }
         });
 
     });
@@ -291,15 +337,22 @@ function BindEverything(){
     $(':input').each(function(){
         $(this).attr('value', this.value);
     });
+
     $('select').each(function(){
         var Selected = $(this).children('option:selected');
         $(this).children('option').removeAttr('selected', false);
         Selected.attr('selected', true);
         $(this).replaceWith($(this)[0].outerHTML);
     });
-    $(':input').bind('keyup', function() {
+
+    $(':input').bind('DOMAttrModified propertychange keyup paste', function() {
         $(this).attr('value', this.value);
     });
+
+    $(':input').bind('change', function() {
+        $(this).attr('value', this.defaultValue);
+    });
+
     $('select').change(function(){
         var Selected = $(this).children('option:selected');
         $(this).children('option').removeAttr('selected', false);
@@ -363,6 +416,7 @@ function BindScroll(){
         }
         //allowScroll = true;
     });
+
 
 }
 
