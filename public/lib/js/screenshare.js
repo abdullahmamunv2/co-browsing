@@ -9,6 +9,9 @@ var mirrorAdmin;
 var updateUI = true;
 
 var allowScroll=true;
+var allowWindowScroll = true;
+
+var scrollStarted = false;
 
 
 /* This block of code is to load inaccessible scripts that may be relative on mobile devices or behind a VPN or restricted network
@@ -52,6 +55,7 @@ function LoadAllScripts(){
                         //loadScript(SocketCDN + 'socket.io/socket.io.js', function(){
                             window.addEventListener('load', function() {
                                 init();
+                                BindEverything();
                                 //startMirroring();
                             });
                             
@@ -71,6 +75,7 @@ function LoadAllScripts(){
                         window.addEventListener('load', function() {
                             //AddMenu();
                             init();
+                            BindEverything();
                             //$('#MenuTable').css({left: ($(window).width() - 30), top: ($(window).height()/2) - 150});
                             //console.log('LOAD');
                             //console.log(document.body.childNodes);
@@ -157,7 +162,7 @@ function startMirroring() {
             //mirrorAdmin
             if(sessvars.Session){
                 //console.log()
-                //ContinueSession();
+                ContinueSession();
             }
 
         }
@@ -187,26 +192,34 @@ function startMirroring() {
 }
 function ContinueSession(){
 
-    console.log('continue session.............');
+    //console.log('continue session.............');
     socket = io(SocketCDN);
     socket.on('connect', function(){
         socket.emit('PageChange', sessvars.Session);
-        $('#RemoteStatus').text('Status: Waiting for connection.');
+        //$('#RemoteStatus').text('Status: Waiting for connection.');
         socket.on('SessionStarted', function() {
-            $('#RemoteStatus').text('Status: Connected!');
+            //$('#RemoteStatus').text('Status: Connected!');
             socketSend({height: $(window).height(), width: $(window).width()});
-            socketSend({ base: location.href.match(/^(.*\/)[^\/]*$/)[1] });
+            //socketSend({ base: window.location.href.match(/^(.*\/)[^\/]*$/)[1] });
+            socketSend({ base: window.location.href});
             socketSend(oDOM);
+            //console.log('dom sent');
+            //console.log(oDOM);
             SendMouse();
             //$('body').append('<div id="AdminPointer"></div> ');
             BindScroll();
-
-            $(window).scroll(function(){
-                //socketSend({Windowscroll: $(window).scrollTop()});
-            });
         });
         socket.on('AdminMousePosition', function(msg) {
             $('#AdminPointer').css({'left': msg.PositionLeft - 15, 'top': msg.PositionTop});
+            /*var e = $.Event('mouseenter');
+            e.pageX = msg.PositionLeft;
+            e.pageY =  msg.PositionTop;
+            $("*").trigger(e);
+
+            var e2 = $.Event('mousemove');
+            e2.pageX = msg.PositionLeft;
+            e2.pageY =  msg.PositionTop;
+            $("*").trigger(e2);*/
         });
 
         socket.on('AdminScrollPosition', function(msg) {
@@ -217,7 +230,8 @@ function ContinueSession(){
         socket.on('AdminonClick', function(msg) {
             var event = msg;
             element = mirrorClient.deserialize[event.node];
-            $(element).click();
+            if(element && element['click'])
+                element.click();
             //console.log(msg);
         });
 
@@ -230,11 +244,22 @@ function ContinueSession(){
             if(msg.Windowscroll){
                 $(window).scrollTop(msg.Windowscroll);
             }
+            else if(msg.Winscroll){
+                $(window).scrollTop(msg.Winscroll);
+            }
             else if(msg.viwerScrollStart){
                 allowScroll = false;
             }
             else if(msg.viwerScrollStop){
                 allowScroll = true;
+            }
+            else if(msg.viwerWinScrollStart){
+                allowWindowScroll = false;
+            }
+
+            else if(msg.viwerWinScrollStop){
+                //console.log('visitorstop');
+                allowWindowScroll = true;
             }
             else if(msg.scrollevent){
                 var event = msg.data;
@@ -245,11 +270,13 @@ function ContinueSession(){
                 //console.log(msg);
             }
             else if(msg.args){
-                
+                //console.log(msg.args);
                 mirrorClient[msg.f].apply(mirrorClient, msg.args);
                 mirrorClient.takeSummaries();
+            }
 
-
+            else if(msg.url){
+                window.location.replace(msg.url);
             }
         });
     });
@@ -265,27 +292,30 @@ function CreateSession(){
 
         //console.log('create session.........');
         socket.emit('CreateSession', SessionKey);
-        $('#RemoteStatus').text('Status: Waiting for connection.');
+        //$('#RemoteStatus').text('Status: Waiting for connection.');
         socket.on('SessionStarted', function() {
-            sessvars.Session = SessionKey;
             $('#RemoteStatus').text('Status: Connected!');
             socketSend({height: $(window).height(), width: $(window).width()});
-            socketSend({ base: location.href.match(/^(.*\/)[^\/]*$/)[1] });
-            
+            //socketSend({ base: window.location.href.match(/^(.*\/)[^\/]*$/)[1] });
+            socketSend({ base: window.location.href});
             socketSend(oDOM);
+            //console.log('dom sent');
+            //console.log(oDOM);
             SendMouse();
+            //$('body').append('<div id="AdminPointer"></div> ');
             BindScroll();
-
-            $('body').append('<div id="AdminPointer"></div> ');
-            $(window).scroll(function(){
-                //console.log('scrolled : '+ $(window).scrollTop() );
-                //socketSend({Windowscroll: $(window).scrollTop()});
-            });
-
-            //$(this).scrollstop(func)
         });
         socket.on('AdminMousePosition', function(msg) {
             $('#AdminPointer').css({'left': msg.PositionLeft - 15, 'top': msg.PositionTop});
+            /*var e = $.Event('mouseenter');
+            e.pageX = msg.PositionLeft;
+            e.pageY =  msg.PositionTop;
+            $("*").trigger(e);
+
+            var e2 = $.Event('mousemove');
+            e2.pageX = msg.PositionLeft;
+            e2.pageY =  msg.PositionTop;
+            $("*").trigger(e2);*/
         });
 
         socket.on('AdminScrollPosition', function(msg) {
@@ -296,7 +326,8 @@ function CreateSession(){
         socket.on('AdminonClick', function(msg) {
             var event = msg;
             element = mirrorClient.deserialize[event.node];
-            $(element).click();
+            if(element && element['click'])
+                element.click();
             //console.log(msg);
         });
 
@@ -309,11 +340,22 @@ function CreateSession(){
             if(msg.Windowscroll){
                 $(window).scrollTop(msg.Windowscroll);
             }
+            else if(msg.Winscroll){
+                $(window).scrollTop(msg.Winscroll);
+            }
             else if(msg.viwerScrollStart){
                 allowScroll = false;
             }
             else if(msg.viwerScrollStop){
                 allowScroll = true;
+            }
+            else if(msg.viwerWinScrollStart){
+                allowWindowScroll = false;
+            }
+
+            else if(msg.viwerWinScrollStop){
+                //console.log('visitorstop');
+                allowWindowScroll = true;
             }
             else if(msg.scrollevent){
                 var event = msg.data;
@@ -324,7 +366,13 @@ function CreateSession(){
                 //console.log(msg);
             }
             else if(msg.args){
+                //console.log(msg.args);
                 mirrorClient[msg.f].apply(mirrorClient, msg.args);
+                mirrorClient.takeSummaries();
+            }
+
+            else if(msg.url){
+                window.location.replace(msg.url);
             }
         });
 
@@ -338,13 +386,6 @@ function BindEverything(){
         $(this).attr('value', this.value);
     });
 
-    $('select').each(function(){
-        var Selected = $(this).children('option:selected');
-        $(this).children('option').removeAttr('selected', false);
-        Selected.attr('selected', true);
-        $(this).replaceWith($(this)[0].outerHTML);
-    });
-
     $(':input').bind('DOMAttrModified propertychange keyup paste', function() {
         $(this).attr('value', this.value);
     });
@@ -353,7 +394,23 @@ function BindEverything(){
         $(this).attr('value', this.defaultValue);
     });
 
-    $('select').change(function(){
+    $('select').each(function(){
+        var Selected = $(this).children('option:selected');
+        $(this).children('option').removeAttr('selected', false);
+        Selected.attr('selected', true);
+        $(this).attr('value' , $(Selected).attr('value') );
+        //$(this).replaceWith($(this)[0].outerHTML);
+    });
+
+    $('select').bind('change',function(){
+        var Selected = $(this).children('option:selected');
+        $(this).children('option').removeAttr('selected', false);
+        Selected.attr('selected', true);
+        //$(this).attr('value' , $(Selected).attr('value') );
+        //$(this).replaceWith($(this)[0].outerHTML);
+    });
+
+    /*$('select').change(function(){
         var Selected = $(this).children('option:selected');
         $(this).children('option').removeAttr('selected', false);
         Selected.attr('selected', true);
@@ -365,8 +422,8 @@ function BindEverything(){
             Selected.attr('selected', true);
             $(this).replaceWith($(this)[0].outerHTML);
             $('select').unbind('change');
-        });
-    });
+        }); 
+    });*/
 }
 
 
@@ -392,8 +449,33 @@ function SendMouse(){
 
 
 function BindScroll(){
+
+    $(window).scroll(function() {
+        if(allowWindowScroll){
+            clearTimeout($.data(this, 'scrollTimer'));
+            $.data(this, 'scrollTimer', setTimeout(function() {
+                // do something
+                //if(allowWindowScroll){
+                    socketSend({visitorWinScrollStop : true});
+                    //console.log('scroll stop');
+                    scrollStarted = false;
+                //}   
+                
+            }, 1000));
+
+        
+            if(!scrollStarted){
+                socketSend({visitorWinScrollStart : true});
+                scrollStarted = true;
+            }
+            
+            socketSend({Winscroll: $(window).scrollTop()});
+            //console.log('send ' + $(window).scrollTop());
+        }
+    });
+
     $("*").on("scroll",function(event){
-        console.log('inside BindScroll ' + allowScroll);
+        //console.log('inside BindScroll ' + allowScroll);
         if(allowScroll){
             var element = event.target;
             var n = mirrorClient.serializeNode(element);
@@ -406,13 +488,13 @@ function BindScroll(){
             socketSend({visitorScrollStart : true});
         }
         //allowScroll = true;
-        console.log('scroll start');
+        //console.log('scroll start');
     });
 
     $("*").on("scrollstop", function(event){
         if(allowScroll){
             socketSend({visitorScrollStop : true});
-            console.log('scroll stop');
+            //console.log('scroll stop');
         }
         //allowScroll = true;
     });

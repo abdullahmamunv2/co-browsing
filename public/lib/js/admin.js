@@ -7,6 +7,12 @@ function StartSession(){
     $('#ClientView')[0].contentWindow.JoinRoom(SessionKey);
     
 }
+
+function StartSessionByurl(){
+    var url = $('#visitorUrl').val();
+    console.log(url);
+    $('#ClientView')[0].contentWindow.Navigatetion(url);
+}
 function ResizePreview(width, height){
     $('#ClientView').width(width);
     $('#ClientView').height(height);
@@ -19,4 +25,7 @@ function AddMouse(){
 }
 function MoveMouse(x,y){
     $('#ClientPointer').css({'left': x - 15, 'top': y + 30});
+}
+function SetUrl(url){
+    $('#visitorUrl').attr('value',url);
 }

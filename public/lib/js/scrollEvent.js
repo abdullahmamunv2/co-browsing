@@ -27,7 +27,6 @@
                 };
  
             jQuery(this).bind('scroll', handler).data(uid1, handler);
- 
         },
         teardown: function(){
             jQuery(this).unbind( 'scroll', jQuery(this).data(uid1) );

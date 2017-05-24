@@ -67,7 +67,8 @@ TreeMirror.prototype = {
               !this.delegate.setAttribute(node, name, nodeData.attributes[name])) {
                 try{
                   //if(paren)
-                   node.setAttribute(name, nodeData.attributes[name]);
+                   if(!node.hasAttribute(name))
+                      node.setAttribute(name, nodeData.attributes[name]);
                 }catch(err){
                   console.log(err);
                 }
@@ -77,6 +78,9 @@ TreeMirror.prototype = {
 
         break;
     }
+
+    if(this.delegate.Postfilter)
+      node = this.delegate.Postfilter(node);
 
     this.idMap[nodeData.id] = node;
 
@@ -135,8 +139,17 @@ TreeMirror.prototype = {
               !this.delegate.setAttribute ||
               !this.delegate.setAttribute(node, attrName, newVal)) {
                 if(node != undefined ){
-                  node.setAttribute(attrName, newVal);
-                  $(node).trigger('change');
+                  if(attrName == 'selected'){
+                      $(node).siblings().removeAttr('selected');
+                      node.setAttribute(attrName, newVal);
+                      //$(node)
+                      $(node.parentNode).attr('value',$(node).attr('value'));
+                  }
+                  else{
+                    node.setAttribute(attrName, newVal);
+                    $(node).trigger('change');
+                  }
+                  
                 }
           }
         }
@@ -173,6 +186,7 @@ TreeMirror.prototype = {
 
   }
 }
+
 
 function TreeMirrorClient(target, mirror, testingQueries) {
   this.target = target;
@@ -431,8 +445,15 @@ TreeMirrorClient.prototype = {
               !this.delegate.setAttribute ||
               !this.delegate.setAttribute(node, attrName, newVal)) {
                 if(node != undefined ){
-                  node.setAttribute(attrName, newVal);
-                  $(node).trigger('change');
+                  if(attrName == 'selected'){
+                      $(node).siblings().removeAttr('selected');
+                      node.setAttribute(attrName, newVal);
+                      $(node.parentNode).attr('value',$(node).attr('value'));
+                  }
+                  else{
+                    node.setAttribute(attrName, newVal);
+                    $(node).trigger('change');
+                  }
                 }
           }
         }
@@ -593,7 +614,15 @@ TreeMirrorAdmin.prototype = {
               !this.delegate.setAttribute ||
               !this.delegate.setAttribute(node, attrName, newVal)) {
                 if(node != undefined ){
-                  node.setAttribute(attrName, newVal);
+                  if(attrName == 'selected'){
+                      $(node).siblings().removeAttr('selected');
+                      node.setAttribute(attrName, newVal);
+                      //$(node)
+                  }
+                  else{
+                    node.setAttribute(attrName, newVal);
+                    $(node).trigger('change');
+                  }
                 }
           }
         }
