@@ -1,3 +1,5 @@
+
+
 var frame = $('#ClientView').contents();
 window.location = 'admin.html?#';
 function StartSession(){

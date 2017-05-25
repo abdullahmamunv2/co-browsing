@@ -54,9 +54,7 @@ function LoadAllScripts(){
                         loadScript('https://cdn.socket.io/socket.io-1.1.0.js', function(){
                         //loadScript(SocketCDN + 'socket.io/socket.io.js', function(){
                             window.addEventListener('load', function() {
-                                init();
-                                BindEverything();
-                                //startMirroring();
+                                onPageLoad();
                             });
                             
                         });
@@ -73,12 +71,7 @@ function LoadAllScripts(){
                     loadScript(CDN + 'lib/js/scrollEvent.js', function(){
                     //loadScript(SocketCDN + 'socket.io/socket.io.js', function(){
                         window.addEventListener('load', function() {
-                            //AddMenu();
-                            init();
-                            BindEverything();
-                            //$('#MenuTable').css({left: ($(window).width() - 30), top: ($(window).height()/2) - 150});
-                            //console.log('LOAD');
-                            //console.log(document.body.childNodes);
+                            onPageLoad();
                             
                         });
                     })
@@ -89,6 +82,13 @@ function LoadAllScripts(){
             })
         });
     }
+}
+
+
+function onPageLoad(){
+    init();
+    BindEverything();
+    AddViwerMousePointer();
 }
 
 function CheckChromeFrame(){
@@ -190,36 +190,24 @@ function startMirroring() {
 
 
 }
-function ContinueSession(){
 
-    //console.log('continue session.............');
-    socket = io(SocketCDN);
-    socket.on('connect', function(){
-        socket.emit('PageChange', sessvars.Session);
-        //$('#RemoteStatus').text('Status: Waiting for connection.');
-        socket.on('SessionStarted', function() {
-            //$('#RemoteStatus').text('Status: Connected!');
+
+function NewSession(){
+    socket.on('SessionStarted', function() {
+            $('#RemoteStatus').text('Status: Connected!');
             socketSend({height: $(window).height(), width: $(window).width()});
-            //socketSend({ base: window.location.href.match(/^(.*\/)[^\/]*$/)[1] });
             socketSend({ base: window.location.href});
             socketSend(oDOM);
-            //console.log('dom sent');
-            //console.log(oDOM);
             SendMouse();
-            //$('body').append('<div id="AdminPointer"></div> ');
             BindScroll();
         });
         socket.on('AdminMousePosition', function(msg) {
             $('#AdminPointer').css({'left': msg.PositionLeft - 15, 'top': msg.PositionTop});
-            /*var e = $.Event('mouseenter');
-            e.pageX = msg.PositionLeft;
-            e.pageY =  msg.PositionTop;
-            $("*").trigger(e);
+            mirrorClient.takeSummaries();
+            //// ***************here add mouse reletaed events**************
 
-            var e2 = $.Event('mousemove');
-            e2.pageX = msg.PositionLeft;
-            e2.pageY =  msg.PositionTop;
-            $("*").trigger(e2);*/
+
+            //// ***********************************************************
         });
 
         socket.on('AdminScrollPosition', function(msg) {
@@ -279,6 +267,18 @@ function ContinueSession(){
                 window.location.replace(msg.url);
             }
         });
+}
+function ContinueSession(){
+
+    //console.log('continue session.............');
+    socket = io(SocketCDN);
+    socket.on('connect', function(){
+        socket.emit('PageChange', sessvars.Session);
+        //$('#RemoteStatus').text('Status: Waiting for connection.');
+        
+
+        /// onpage load.
+        NewSession();
     });
 }
 function CreateSession(){
@@ -293,88 +293,8 @@ function CreateSession(){
         //console.log('create session.........');
         socket.emit('CreateSession', SessionKey);
         //$('#RemoteStatus').text('Status: Waiting for connection.');
-        socket.on('SessionStarted', function() {
-            $('#RemoteStatus').text('Status: Connected!');
-            socketSend({height: $(window).height(), width: $(window).width()});
-            //socketSend({ base: window.location.href.match(/^(.*\/)[^\/]*$/)[1] });
-            socketSend({ base: window.location.href});
-            socketSend(oDOM);
-            //console.log('dom sent');
-            //console.log(oDOM);
-            SendMouse();
-            //$('body').append('<div id="AdminPointer"></div> ');
-            BindScroll();
-        });
-        socket.on('AdminMousePosition', function(msg) {
-            $('#AdminPointer').css({'left': msg.PositionLeft - 15, 'top': msg.PositionTop});
-            /*var e = $.Event('mouseenter');
-            e.pageX = msg.PositionLeft;
-            e.pageY =  msg.PositionTop;
-            $("*").trigger(e);
 
-            var e2 = $.Event('mousemove');
-            e2.pageX = msg.PositionLeft;
-            e2.pageY =  msg.PositionTop;
-            $("*").trigger(e2);*/
-        });
-
-        socket.on('AdminScrollPosition', function(msg) {
-            //v
-        });
-
-
-        socket.on('AdminonClick', function(msg) {
-            var event = msg;
-            element = mirrorClient.deserialize[event.node];
-            if(element && element['click'])
-                element.click();
-            //console.log(msg);
-        });
-
-
-        socket.on('DOMLoaded', function(){
-            BindEverything();
-        });
-
-        socket.on('viewerchanges', function(msg){
-            if(msg.Windowscroll){
-                $(window).scrollTop(msg.Windowscroll);
-            }
-            else if(msg.Winscroll){
-                $(window).scrollTop(msg.Winscroll);
-            }
-            else if(msg.viwerScrollStart){
-                allowScroll = false;
-            }
-            else if(msg.viwerScrollStop){
-                allowScroll = true;
-            }
-            else if(msg.viwerWinScrollStart){
-                allowWindowScroll = false;
-            }
-
-            else if(msg.viwerWinScrollStop){
-                //console.log('visitorstop');
-                allowWindowScroll = true;
-            }
-            else if(msg.scrollevent){
-                var event = msg.data;
-                //console.log(event);
-                allowScroll = false;
-                element = mirrorClient.deserialize[event.node];
-                $(element).scrollTop(event.scrollTop);
-                //console.log(msg);
-            }
-            else if(msg.args){
-                //console.log(msg.args);
-                mirrorClient[msg.f].apply(mirrorClient, msg.args);
-                mirrorClient.takeSummaries();
-            }
-
-            else if(msg.url){
-                window.location.replace(msg.url);
-            }
-        });
+        NewSession();
 
     });
     
@@ -386,13 +306,10 @@ function BindEverything(){
         $(this).attr('value', this.value);
     });
 
-    $(':input').bind('DOMAttrModified propertychange keyup paste', function() {
+    $(':input').bind('DOMAttrModified propertychange keyup paste change', function() {
         $(this).attr('value', this.value);
     });
 
-    $(':input').bind('change', function() {
-        $(this).attr('value', this.defaultValue);
-    });
 
     $('select').each(function(){
         var Selected = $(this).children('option:selected');
@@ -442,7 +359,7 @@ function SendMouse(){
                 + (doc && doc.scrollTop || body && body.scrollTop || 0)
                 - (doc.clientTop || 0);
         }
-        //socket.emit('ClientMousePosition', {room: sessvars.Session, PositionLeft: e.pageX, PositionTop: e.pageY - 5});
+        socket.emit('ClientMousePosition', {room: sessvars.Session, PositionLeft: e.pageX, PositionTop: e.pageY - 5});
         //console.log('on mouse move' +  e.pageX+" "+e.pageY + "     "+SessionKey);
     }
 }
@@ -561,4 +478,9 @@ function AddMenu(){
             $(this).animate({left:'+=' + ($('#MenuTable').width() - 30)},'fast');
         }
     });
+}
+
+function AddViwerMousePointer(){
+    $('body').append('<div id="AdminPointer">Agent</div> ');
+    $('#AdminPointer').css({'left': - 15, 'top': -15});
 }

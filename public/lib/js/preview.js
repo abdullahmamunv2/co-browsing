@@ -1,6 +1,8 @@
 var CDN = 'http://localhost:3000/';
 var SocketCDN = 'http://localhost:3000';
 
+console.log('connection.........................................');
+
 var socket = io(SocketCDN);
 var SessionKey;
 var element;
@@ -73,6 +75,7 @@ function SendClick(){
         var element = event.target;
         var n = mirrorAdmin.serializeNode(element);
         socket.emit('AdminonClick', {node : n, room: SessionKey});
+        mirrorAdmin.takeSummaries();
     });
 }
 
@@ -171,9 +174,6 @@ function SessionStarted(){
             window.parent.ResizePreview(msg.width, msg.height);
         }
         if(msg.args){
-            //console.log('Dom loaded');
-            //console.log(msg.args);
-            //console.log(msg);
             if(msg.f == 'initialize'){
                 if(mirrorAdmin)
                     mirrorAdmin.disconnect();
@@ -218,7 +218,7 @@ function SessionStarted(){
                 BindEverything();
                 /// now its time to send scroll position.
                 window.parent.RemoveMouse();
-                //window.parent.AddMouse();
+                window.parent.AddMouse();
                 //SendScroll();
                 SendClick();
                 BindScroll();
@@ -226,7 +226,8 @@ function SessionStarted(){
             }
 
             else{
-                mirrorAdmin.takeSummaries();
+                if(mirrorAdmin)
+                    mirrorAdmin.takeSummaries();
             }
         }
         if(msg.Windowscroll){
@@ -286,13 +287,10 @@ function BindEverything(){
         $(this).attr('value', this.value);
     });
 
-    $(':input').bind('DOMAttrModified propertychange keyup paste', function() {
+    $(':input').bind('DOMAttrModified propertychange keyup paste change', function() {
         $(this).attr('value', this.value);
     });
 
-    $(':input').bind('change', function() {
-        $(this).attr('value', this.defaultValue);
-    });
 
     $('select').each(function(){
         var Selected = $(this).children('option:selected');

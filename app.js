@@ -51,7 +51,7 @@ io.on('connection', function(socket) {
         logStream.write("PageChange,SessionStarted,\n");
         socket.join(msg);
         io.sockets.in(msg).emit('SessionStarted', '');
-        console.log('SessionStarted');
+        //console.log('SessionStarted');
     });
     socket.on('JoinRoom', function(msg){
         if(logStream)
@@ -59,7 +59,7 @@ io.on('connection', function(socket) {
         socket.join(msg);
         //console.log('Join Room with ' + msg);
         io.sockets.in(msg).emit('SessionStarted', '');
-        console.log('connected to Room '+ msg +"    "+ getUsersInRoomNumber(msg) );
+        //console.log('connected to Room '+ msg +"    "+ getUsersInRoomNumber(msg) );
     });
     socket.on('ClientMousePosition', function(msg){
         //console.log('ClientMousePosition');
@@ -105,7 +105,7 @@ io.on('connection', function(socket) {
             else{
                 logStream.write("ViewrchangeHappened("+msg.change.f+"),viewerchanges,\n");
         }
-        console.log('ViewerchangeHappened');
+        //console.log('ViewerchangeHappened');
         socket.broadcast.to(msg.room).emit('viewerchanges', msg.change);
     });
     socket.on('DOMLoaded', function(msg){

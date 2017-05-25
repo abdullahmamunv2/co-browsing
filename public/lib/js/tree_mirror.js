@@ -70,7 +70,7 @@ TreeMirror.prototype = {
                    if(!node.hasAttribute(name))
                       node.setAttribute(name, nodeData.attributes[name]);
                 }catch(err){
-                  console.log(err);
+                  //console.log(err);
                 }
             
           }
@@ -89,7 +89,7 @@ TreeMirror.prototype = {
           //if(paren)
           parent.appendChild(node);
         }catch(err){
-           console.log(err);
+           //console.log(err);
            //console.log(node);
         }
      }
@@ -118,7 +118,7 @@ TreeMirror.prototype = {
                   //if(paren)
             parent.insertBefore(node, previous ? previous.nextSibling : parent.firstChild);
       }catch(err){
-            console.log(err);
+            //console.log(err);
                   //console.log(node);
       }
       
@@ -146,7 +146,7 @@ TreeMirror.prototype = {
                       $(node.parentNode).attr('value',$(node).attr('value'));
                   }
                   else{
-                    node.setAttribute(attrName, newVal);
+                    $(node).attr(attrName, newVal);
                     $(node).trigger('change');
                   }
                   
@@ -424,7 +424,7 @@ TreeMirrorClient.prototype = {
                   //if(paren)
             parent.insertBefore(node, previous ? previous.nextSibling : parent.firstChild);
       }catch(err){
-            console.log(err);
+            //console.log(err);
                   //console.log(node);
       }
       
@@ -448,10 +448,11 @@ TreeMirrorClient.prototype = {
                   if(attrName == 'selected'){
                       $(node).siblings().removeAttr('selected');
                       node.setAttribute(attrName, newVal);
+                      //$(node)
                       $(node.parentNode).attr('value',$(node).attr('value'));
                   }
                   else{
-                    node.setAttribute(attrName, newVal);
+                    $(node).attr(attrName, newVal);
                     $(node).trigger('change');
                   }
                 }
@@ -548,7 +549,7 @@ TreeMirrorAdmin.prototype = {
                   //if(paren)
                    node.setAttribute(name, nodeData.attributes[name]);
                 }catch(err){
-                  console.log(err);
+                  //console.log(err);
                 }
             
           }
@@ -593,7 +594,7 @@ TreeMirrorAdmin.prototype = {
                   //if(paren)
             parent.insertBefore(node, previous ? previous.nextSibling : parent.firstChild);
       }catch(err){
-            console.log(err);
+            //console.log(err);
                   //console.log(node);
       }
       
